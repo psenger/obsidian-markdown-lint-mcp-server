@@ -163,6 +163,27 @@ describe('renderMermaidDiagrams', () => {
     expect(result.svgs[0].path).toContain('my-complex-title-2026');
   });
 
+  it('folds accented characters to ASCII in the output path', async () => {
+    const source = 'flowchart LR\n  A --> B\n';
+    const content = `# Doc\n\n\`\`\`mermaid\n${source}\`\`\`\n`;
+    const result = await renderMermaidDiagrams(
+      content, 'attachments', 'Café Menu',
+      'default', 'white', makeBrowserFactory(), makeFakeRenderer()
+    );
+    expect(result.svgs[0].path).toBe('attachments/cafe-menu/flowchart-1.svg');
+  });
+
+  it('falls back to "untitled" when the title has no ASCII slug characters', async () => {
+    const source = 'flowchart LR\n  A --> B\n';
+    const content = `# Doc\n\n\`\`\`mermaid\n${source}\`\`\`\n`;
+    const result = await renderMermaidDiagrams(
+      content, 'attachments', '会議メモ',
+      'default', 'white', makeBrowserFactory(), makeFakeRenderer()
+    );
+    expect(result.svgs[0].path).toBe('attachments/untitled/flowchart-1.svg');
+    expect(result.svgs[0].path).not.toContain('//');
+  });
+
   it('renders multiple mermaid blocks with sequential numbering', async () => {
     const block = '```mermaid\nflowchart LR\n  A --> B\n```';
     const content = `# Doc\n\n${block}\n\n${block}\n`;
