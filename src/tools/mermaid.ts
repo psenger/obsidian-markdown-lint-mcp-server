@@ -50,10 +50,13 @@ const DEFAULT_RENDERER: DiagramRenderer = (browser, source, format, opts) =>
 const MERMAID_FENCE = /^```mermaid\s*\n([\s\S]*?)```/gm;
 
 function slugify(text: string): string {
-  return text
+  const slug = text
+    .normalize('NFKD')
+    .replace(/[\u0300-\u036f]/g, '')
     .toLowerCase()
     .replace(/[^a-z0-9]+/g, '-')
     .replace(/^-+|-+$/g, '');
+  return slug || 'untitled';
 }
 
 function getDiagramType(source: string): string {
