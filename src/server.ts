@@ -1,5 +1,6 @@
 import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js';
 import { createServer } from './create-server.js';
+import { exitOnStdinClose } from './lib/stdio-lifecycle.js';
 
 /**
  * Entry point. This is a stdio MCP server: Claude Code launches it as a
@@ -15,6 +16,7 @@ async function main(): Promise<void> {
   const server = createServer();
   const transport = new StdioServerTransport();
   await server.connect(transport);
+  exitOnStdinClose(process.stdin, process.exit);
   console.error('obsidian-markdown-lint-mcp-server running on stdio');
 }
 

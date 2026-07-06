@@ -9,6 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 - **mermaid**: `render_mermaid_diagrams` now folds accented characters to their ASCII base when slugifying `document_title` (`Café Menu` → `cafe-menu`) and falls back to `untitled` when a title has no ASCII slug characters, so fully non-ASCII titles no longer produce an empty path segment (`attachments//…`) and can no longer collide on the same SVG file. ([#17](https://github.com/psenger/obsidian-markdown-lint-mcp-server/issues/17))
+- **server**: the stdio server now exits when the client disconnects (stdin reaches EOF), so `docker run -i --rm` containers stop and are removed at the end of a session instead of lingering as orphans. ([#18](https://github.com/psenger/obsidian-markdown-lint-mcp-server/issues/18))
 
 ## [0.1.1] - 2026-06-08
 
