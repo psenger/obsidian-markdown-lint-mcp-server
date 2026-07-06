@@ -1,16 +1,21 @@
-# This is a stdio MCP server, not a long-running service. Do NOT `docker compose up`.
-# Compose is used here only to BUILD and TAG the image:
+# Two transports share one image (same Dockerfile, default CMD is stdio).
+#
+# STDIO (default) — one subprocess per session, launched by the client. Do NOT
+# `docker compose up` this service; Compose is only used to build/tag the image:
 #
 #     docker compose build
-#
-# Claude Code then launches the server per session over stdio:
-#
 #     claude mcp add obsidian-markdown-lint -- docker run -i --rm obsidian-markdown-lint-mcp
 #
-# To smoke-test the container by hand, you can also run the one-shot service
-# (stdin stays open, no TTY — exactly how an MCP client drives it):
+# To smoke-test the stdio container by hand (stdin open, no TTY — exactly how an
+# MCP client drives it):
 #
 #     docker compose run --rm obsidian-markdown-lint-mcp
+#
+# HTTP (optional) — one shared, long-running server for every session
+# (Streamable HTTP, issue #19). You own its lifecycle:
+#
+#     docker compose up -d obsidian-markdown-lint-mcp-http
+#     claude mcp add --transport http obsidian-markdown-lint http://localhost:3000/mcp -s user
 #
 services:
   obsidian-markdown-lint-mcp:
@@ -18,3 +23,25 @@ services:
     image: obsidian-markdown-lint-mcp
     stdin_open: true   # equivalent to `docker run -i` — keep stdin open for JSON-RPC
     tty: false         # never allocate a TTY; the stream must stay raw JSON-RPC
+
+  # Optional shared HTTP server. Overrides the default stdio CMD to run the HTTP
+  # entry point; same image, no rebuild needed.
+  obsidian-markdown-lint-mcp-http:
+    build: .
+    image: obsidian-markdown-lint-mcp
+    command: ["node", "dist/server-http.js"]
+    environment:
+      PORT: "3000"
+    ports:
+      # Bind to loopback only. `--network none` is impossible with a listener,
+      # so localhost-only publishing is the mitigation — the port is not exposed
+      # off-host.
+      - "127.0.0.1:3000:3000"
+    restart: unless-stopped
+    read_only: true                       # hardening: immutable root filesystem
+    cap_drop: ["ALL"]                      # hardening: drop all Linux capabilities
+    security_opt: ["no-new-privileges:true"]
+    tmpfs:
+      # Chromium runs with --disable-dev-shm-usage, so it writes shared memory
+      # into /tmp; a writable /tmp is required under the read-only root.
+      - /tmp

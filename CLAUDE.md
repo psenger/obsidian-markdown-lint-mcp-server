@@ -61,7 +61,18 @@ This writes a `.mcp.json` with stdio config:
 }
 ```
 
-The image must be built (`docker build -t obsidian-markdown-lint-mcp .`) and Docker Desktop running. Verify with `claude mcp list`; tools load at the start of a new Claude Code session. Do **not** use `docker compose up` — this is a stdio subprocess, not an HTTP service.
+The image must be built (`docker build -t obsidian-markdown-lint-mcp .`) and Docker Desktop running. Verify with `claude mcp list`; tools load at the start of a new Claude Code session. For the default stdio transport do **not** use `docker compose up` — it is a per-session subprocess, not a long-running service.
+
+### Optional: shared HTTP transport
+
+An optional Streamable HTTP transport (issue #19) runs one shared server for all sessions instead of one container per session. stdio stays the default; the tool code is identical. Start it and register it:
+
+```bash
+docker compose up -d obsidian-markdown-lint-mcp-http   # or: npm run start:http
+claude mcp add --transport http obsidian-markdown-lint http://localhost:3000/mcp -s user
+```
+
+The entry point is `src/server-http.ts`; the session-routing logic (POST/GET/DELETE on `/mcp`, keyed by the `mcp-session-id` header) lives in `src/lib/http-transport.ts`. Use this only when you specifically want a single shared instance; you own its lifecycle, and every session fails if it is down.
 
 ## Using the MCP tools
 
@@ -110,7 +121,7 @@ JSON Schema files live in `.schemas/`. Each maps to a `type` field value:
 - Unit tests: `tests/unit/**/*.test.ts`
 - Eval fixtures: `tests/evals/fixtures/`
 - Eval runner: `tests/evals/eval-runner.ts`
-- `src/server.ts` (stdio bootstrap) and `src/create-server.ts` (tool registration) are excluded from coverage — pure wiring, exercised by `tests/unit/create-server.test.ts` via an in-memory transport
+- `src/server.ts` (stdio bootstrap), `src/server-http.ts` (HTTP bootstrap), and `src/create-server.ts` (tool registration) are excluded from coverage — pure wiring. The testable logic lives in `src/lib/` (`stdio-lifecycle.ts`, `http-transport.ts`) and is exercised by unit tests; `tests/unit/create-server.test.ts` drives tool registration via an in-memory transport, and `tests/unit/lib/http-transport.test.ts` drives the HTTP session lifecycle against an in-process listener
 
 ## Key technical notes
 

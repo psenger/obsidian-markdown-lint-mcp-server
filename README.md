@@ -88,6 +88,26 @@ For stricter isolation, add a read-only root with a writable temp dir and drop a
 docker run -i --rm --network none --security-opt no-new-privileges --read-only --tmpfs /tmp --cap-drop ALL --memory 2g obsidian-markdown-lint-mcp
 ```
 
+## Choosing a transport
+
+The default is **stdio**, and it is the right choice for almost everyone. An optional **Streamable HTTP** transport ([#19](https://github.com/psenger/obsidian-markdown-lint-mcp-server/issues/19)) exists for the specific case where you want a single shared server instead of one container per session.
+
+| | stdio (default) | Streamable HTTP (optional) |
+|---|---|---|
+| Container lifecycle | Client starts/stops one per session; zero management | You run one shared server (`docker compose up -d`) and own its lifecycle |
+| Concurrency | N sessions → N containers | N sessions → 1 container |
+| Sandbox | Strongest (`--network none` possible) | A port must be open; loopback-only binding is the mitigation |
+| Failure mode | Isolated per session | If the shared server is down, every session fails |
+
+Both share one image and the same tool code. To run the HTTP server:
+
+```bash
+docker compose up -d obsidian-markdown-lint-mcp-http
+claude mcp add --transport http obsidian-markdown-lint http://localhost:3000/mcp -s user
+```
+
+The server listens on `PORT` (default 3000) and handles `POST`/`GET`/`DELETE` at `/mcp`, one MCP session per client keyed by the `mcp-session-id` header. Without Docker: `npm run build && npm run start:http`. The compose service binds to `127.0.0.1` only and runs read-only with all capabilities dropped; verify a Mermaid render succeeds under those flags before relying on them.
+
 ## Configuration
 
 ### Vault layout
@@ -268,6 +288,7 @@ docker compose run --rm obsidian-markdown-lint-mcp
 ```
 src/
   server.ts             stdio entry point (StdioServerTransport bootstrap)
+  server-http.ts        optional Streamable HTTP entry point (shared server)
   create-server.ts      builds the McpServer and registers the 4 tools
   tools/
     lint.ts             lint_markdown implementation
@@ -276,9 +297,11 @@ src/
   lib/
     frontmatter.ts      gray-matter parse/update helpers
     svg-metadata.ts     base64 embed/extract helpers
+    stdio-lifecycle.ts  exit the stdio server when the client disconnects
+    http-transport.ts   Streamable HTTP session router (POST/GET/DELETE /mcp)
 .schemas/               JSON Schema files for all 7 note types
 Dockerfile              stdio server image (Chromium for Mermaid)
-docker-compose.yml      build/tag helper (not `up` — see comments)
+docker-compose.yml      build/tag helper + optional HTTP service
 ```
 
 ## License
