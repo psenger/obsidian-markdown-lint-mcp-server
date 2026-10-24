@@ -43,7 +43,7 @@
     "ajv": "^8.17.1",
     "ajv-formats": "^3.0.1",
     "gray-matter": "^4.0.3",
-    "markdownlint": "^0.41.0"
+    "markdownlint": "^0.41.1"
   },
   "devDependencies": {
     "@types/jest": "^30.0.0",
@@ -51,7 +51,7 @@
     "jest": "^30.5.0",
     "ts-jest": "^29.4.12",
     "ts-node": "^10.9.2",
-    "typescript": "^7.0.2"
+    "typescript": "^6.0.3"
   },
   "engines": {
     "node": ">=20.0.0"
