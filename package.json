@@ -1,6 +1,6 @@
 {
   "name": "obsidian-markdown-lint-mcp-server",
-  "version": "0.1.1",
+  "version": "0.2.0",
   "description": "MCP server for markdown linting, front matter validation, and Mermaid SVG rendering",
   "license": "MIT",
   "author": "Philip Senger",
