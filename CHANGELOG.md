@@ -7,6 +7,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+- **deps**: bumped `typescript` from 6.0.3 to 7.0.2. TypeScript 7's npm package no longer exposes the compiler API, so `ts-jest` and `ts-node` cannot run on it; unit tests now transform with `babel-jest` + `@babel/preset-typescript`, and `npm run dev`, `eval`, and `snapshot` run through `tsx`. `tsc` still builds `dist/`, and coverage and the `istanbul ignore` hints are unchanged. ([#57](https://github.com/psenger/obsidian-markdown-lint-mcp-server/pull/57))
+
 ## [0.2.0] - 2026-11-13
 
 ### Added

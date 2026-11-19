@@ -31,11 +31,11 @@
     "build": "tsc",
     "start": "node dist/server.js",
     "start:http": "node dist/server-http.js",
-    "dev": "ts-node src/server.ts",
+    "dev": "tsx src/server.ts",
     "test": "NODE_OPTIONS=--experimental-vm-modules jest",
     "test:coverage": "NODE_OPTIONS=--experimental-vm-modules jest --coverage",
-    "eval": "node --experimental-vm-modules --loader ts-node/esm tests/evals/eval-runner.ts",
-    "snapshot": "node --experimental-vm-modules --loader ts-node/esm tests/snapshot/snapshot-runner.ts"
+    "eval": "tsx tests/evals/eval-runner.ts",
+    "snapshot": "tsx tests/snapshot/snapshot-runner.ts"
   },
   "dependencies": {
     "@mermaid-js/mermaid-cli": "^12.2.0",
@@ -46,18 +46,19 @@
     "markdownlint": "^0.42.1"
   },
   "devDependencies": {
+    "@babel/core": "^8.1.2",
+    "@babel/preset-typescript": "^8.0.7",
     "@types/jest": "^30.0.0",
     "@types/node": "^26.6.6",
+    "babel-jest": "^30.5.2",
     "jest": "^30.5.0",
-    "ts-jest": "^29.4.12",
-    "ts-node": "^10.9.2",
-    "typescript": "^6.0.3"
+    "tsx": "^4.23.15",
+    "typescript": "^7.0.2"
   },
   "engines": {
     "node": ">=20.0.0"
   },
   "jest": {
-    "preset": "ts-jest/presets/default-esm",
     "testEnvironment": "node",
     "extensionsToTreatAsEsm": [
       ".ts"
@@ -67,13 +68,11 @@
     },
     "transform": {
       "^.+\\.ts$": [
-        "ts-jest",
+        "babel-jest",
         {
-          "useESM": true,
-          "tsconfig": {
-            "module": "ESNext",
-            "moduleResolution": "Bundler"
-          }
+          "presets": [
+            "@babel/preset-typescript"
+          ]
         }
       ]
     },
